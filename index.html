@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Wizard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #282c34;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-image 0.5s ease-in-out;
+        }
+        .container {
+            text-align: center;
+            background-color: rgba(59, 64, 72, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #61dafb;
+            border: none;
+            border-radius: 5px;
+        }
+        #weather-info {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SkySpy</h1>
+        <div>
+            <input type="text" id="location" placeholder="Enter location">
+            <button id="get-weather">Get Weather</button>
+        </div>
+        <div id="weather-info">
+            <h2 id="location-name"></h2>
+            <p id="weather-condition"></p>
+            <p id="temperature"></p>
+            <p id="feels-like"></p>
+            <p id="humidity"></p>
+            <p id="precautions"></p>
+        </div>
+    </div>
+
+    <script>
+        const locationInput = document.getElementById('location');
+        const getWeatherBtn = document.getElementById('get-weather');
+        const weatherInfo = document.getElementById('weather-info');
+        const locationName = document.getElementById('location-name');
+        const weatherCondition = document.getElementById('weather-condition');
+        const temperature = document.getElementById('temperature');
+        const feelsLike = document.getElementById('feels-like');
+        const humidity = document.getElementById('humidity');
+        const precautions = document.getElementById('precautions');
+
+        const weatherAPIUrl = 'https://api.openweathermap.org/data/2.5/weather';
+        const apiKey = 'c2ef69d3859bc799d73d99ae569d21dc';
+
+        
+
+        getWeatherBtn.addEventListener('click', async () => {
+            const location = locationInput.value.trim();
+
+            if (!location) {
+                alert('Please enter a location.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${weatherAPIUrl}?q=${location}&appid=${apiKey}&units=metric`);
+                const weatherData = await response.json();
+
+                if (weatherData.cod === '404') {
+                    throw new Error('Location not found.');
+                }
+
+                if (!weatherData.weather || weatherData.weather.length === 0) {
+                    throw new Error('Weather data not available.');
+                }
+
+                const cityName = weatherData.name;
+                const weatherDesc = weatherData.weather[0].description;
+                const temp = Math.round(weatherData.main.temp);
+                const feelsLikeTemp = Math.round(weatherData.main.feels_like);
+                const humidityValue = weatherData.main.humidity;
+
+                let precautionText = '';
+
+                switch (weatherDesc) {
+                    case 'rainy':
+                    case 'shower rain':
+                    case 'light rain':
+                    case 'heavy rain':
+                    case 'thunderstorm':
+                        precautionText = 'Carry an umbrella or raincoat. Be cautious of slippery roads.';
+                        break;
+                    case 'sunny':
+                    case 'clear sky':
+                        precautionText = 'Wear sunscreen and sunglasses. Stay hydrated.';
+                        break;
+                    case 'snow':
+                    case 'snowy':
+                        precautionText = 'Wear warm clothes and be cautious of slippery roads.';
+                        break;
+                    case 'fog':
+                    case 'mist':
+                        precautionText = 'Drive carefully and use fog lights if needed.';
+                        break;
+                    default:
+                        precautionText = 'Check local weather updates for more information.';
+                        break;
+                }
+
+                locationName.textContent = `Location: ${cityName}`;
+                weatherCondition.textContent = `Weather: ${weatherDesc}`;
+                temperature.textContent = `Temperature: ${temp}°C`;
+                feelsLike.textContent = `Feels Like: ${feelsLikeTemp}°C`;
+                humidity.textContent = `Humidity: ${humidityValue}%`;
+                precautions.textContent = `Precautions: ${precautionText}`;
+
+                weatherInfo.style.display = 'block';
+            } catch (error) {
+                weatherInfo.style.display = 'none';
+                alert(error.message);
+            }
+        });
+    </script>
+</body>
+</html>
